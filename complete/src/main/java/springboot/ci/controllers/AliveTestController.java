@@ -6,10 +6,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class HelloController {
-    @RequestMapping("/hello2")
+public class AliveTestController {
+    @RequestMapping("/")
     public String hello(Model model, @RequestParam(value="name", required=false, defaultValue="World") String name) {
         model.addAttribute("name", name);
-        return "hello";
+        return "<H1> Cloud Initialiser is Alive</H1>";
     }
 }

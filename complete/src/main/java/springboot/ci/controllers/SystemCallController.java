@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import springboot.ci.services.SystemCalls;
 
 @RestController
-public class CI_SystemCalls {
+public class SystemCallController {
 
 	@RequestMapping("/systest")
 	public String index() {

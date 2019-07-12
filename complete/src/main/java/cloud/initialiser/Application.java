@@ -1,11 +1,11 @@
-package hello;
+package cloud.initialiser;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
-@ComponentScan(basePackages = "springboot.ci.controllers, hello" )
+@ComponentScan(basePackages = "springboot.ci.controllers")
 public class Application {
 
     public static void main(String[] args) {
