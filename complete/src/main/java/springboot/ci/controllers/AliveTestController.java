@@ -10,6 +10,9 @@ public class AliveTestController {
     @RequestMapping("/")
     public String hello(Model model, @RequestParam(value="name", required=false, defaultValue="World") String name) {
         model.addAttribute("name", name);
-        return "<H1> Cloud Initialiser is Alive</H1>";
+        String aliveResp = "<H1>Cloud Initialiser API's</H1>";
+        aliveResp += "<a href='http://www.stockwidgets.com:9090/greeting'>Greeting Test</a><BR>";
+        aliveResp += "<a href='http://www.stockwidgets.com:9090/systest'>System Call Test</a><BR>";
+        return aliveResp;
     }
 }
