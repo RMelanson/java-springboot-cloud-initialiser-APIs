@@ -8,68 +8,84 @@ import java.io.InputStreamReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SystemCalls {
-	
-	static String osName = System.getProperty("os.name");
+import org.springframework.util.StringUtils;
 
+public class SystemCalls {
+
+	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
-	
-	public static Map<String,Object> test() {
-		LinkedHashMap<String,Object> lhm = new LinkedHashMap<String,Object>();
-		String cmd = "";
-		if (isWindows)
-			cmd="DIR";
-		else
-			cmd="ls -l";
-		
-		lhm.put("CMD", cmd);
-		lhm.put("OS", osName);
-		test(lhm);
-		System.out.println(lhm);
+
+	static final String CMD = "SYSTEM CMD";
+	static final String CMD_RESP = "CMD RESPONSE";
+
+	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
 	}
-		
-	public static LinkedHashMap<String, Object> test(LinkedHashMap<String,Object> lhm) {
+
+	public static LinkedHashMap<String, Object> execSysCmd(LinkedHashMap<String, Object> requestLHM) {
 		Runtime r = Runtime.getRuntime();
-		String cmd = (String) lhm.get("CMD");
+		String cmd = (String) requestLHM.get(CMD);
 		StringBuilder cmdBufferResp = new StringBuilder();
+		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
+		responceLHM.put("REQUEST", requestLHM);
+		responceLHM.put("OS", osName);
+		responceLHM.put(CMD, cmd);
 
-		try {
-			/*
-			 * Here we are executing the UNIX command ls for directory listing. The format
-			 * returned is the long format which includes file information and permissions.
-			 */
-			Process p = r.exec(cmd);
-			InputStream in = p.getInputStream();
-			BufferedInputStream buf = new BufferedInputStream(in);
-			InputStreamReader inread = new InputStreamReader(buf);
-			BufferedReader bufferedreader = new BufferedReader(inread);
-
-			// Read the ls output
-			String line;
-			while ((line = bufferedreader.readLine()) != null) {
-				cmdBufferResp.append(line);
-			}
-			lhm.put("CMD RESPONSE", cmdBufferResp.toString());
-			System.out.println(line);
-			// Check for ls failure
+		if (StringUtils.isEmpty(cmd)) {
+			responceLHM = new LinkedHashMap<String, Object>();
+			responceLHM.put(CMD, "NULL");
+			responceLHM.put(CMD_RESP, "ERR: Please Enter Valid System Command");
+		} else
 			try {
-				if (p.waitFor() != 0) {
-					lhm.put("ERROR waitFor()", p.exitValue());
+				/*
+				 * Here we are executing the System Command. Returning the result as a String
+				 */
+				Process p = r.exec(cmd);
+				InputStream in = p.getInputStream();
+				BufferedInputStream buf = new BufferedInputStream(in);
+				InputStreamReader inread = new InputStreamReader(buf);
+				BufferedReader bufferedreader = new BufferedReader(inread);
+
+				// Read the ls output
+				String line;
+				while ((line = bufferedreader.readLine()) != null) {
+					cmdBufferResp.append(line);
 				}
-			} catch (InterruptedException e) {
-				lhm.put("ERROR InterruptedException", e.toString());
-				System.err.println(e);
-			} finally {
-				// Close the InputStream
-				bufferedreader.close();
-				inread.close();
-				buf.close();
-				in.close();
+				String cmdResp = formatResp((String) requestLHM.get("MODE"), cmdBufferResp.toString());
+				responceLHM.put(CMD_RESP, cmdResp);
+				System.out.println(line);
+				// Check for ls failure
+				try {
+					if (p.waitFor() != 0) {
+						responceLHM.put("ERR: waitFor()", p.exitValue());
+					}
+				} catch (InterruptedException e) {
+					responceLHM.put("ERR: InterruptedException", e.toString());
+					System.err.println(e);
+				} finally {
+					// Close the InputStream
+					bufferedreader.close();
+					inread.close();
+					buf.close();
+					in.close();
+				}
+			} catch (IOException e) {
+				responceLHM.put("ERROR IOException", e.toString());
 			}
-		} catch (IOException e) {
-			lhm.put("ERROR IOException", e.toString());
+		return responceLHM;
+	}
+
+	private static String formatResp(String mode, String resp) {
+		switch (mode) {
+		case "HTML":
+			resp = resp.replaceAll("\n", "<BR>");
+			break;
+		case "TEXT":
+			resp = resp.replaceAll("<BR>", "\n");
+			break;
+		default:
+			break;
 		}
-		return lhm;
+		return resp;
 	}
 }
