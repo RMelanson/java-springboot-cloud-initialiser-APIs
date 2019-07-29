@@ -3,6 +3,7 @@ package springboot.ci.controllers;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +17,7 @@ public class SystemCallController {
 
 	static final String CMD = "SYSTEM CMD";
 
+    @CrossOrigin()
 	@GetMapping(value = "/system", produces = "application/json")
 	public Map<String, Object> systemGet(@RequestParam(value = "cmd", required = false, defaultValue = "") String cmd,
 			@RequestParam(value = "respMode", required = false, defaultValue = "HTML") String mode) {
@@ -30,6 +32,7 @@ public class SystemCallController {
 		return responceLHM;
 	}
 
+    @CrossOrigin()
 	@PostMapping(value = "/system", produces = "application/json")
 	public Map<String, Object> systemPost(@RequestBody LinkedHashMap<String, Object> requestLHM) {
 		System.out.println("EXECUTING CMD = " + requestLHM.toString());

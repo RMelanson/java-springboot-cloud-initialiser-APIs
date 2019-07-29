@@ -1,6 +1,7 @@
 package springboot.ci.controllers;
 
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,7 @@ public class AliveTestController {
 	static String port     = "9090";
 	static String baseURL  = protocol + hostName + port;
 
+    @CrossOrigin()
     @RequestMapping("/")
     public String hello(Model model, @RequestParam(value="name", required=false, defaultValue="World") String name) {
         model.addAttribute("name", name);
