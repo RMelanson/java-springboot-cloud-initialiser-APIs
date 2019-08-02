@@ -27,7 +27,9 @@ public class SystemCalls {
 		String cmd = (String) requestLHM.get(CMD);
 		StringBuilder cmdBufferResp = new StringBuilder();
 		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
-		responceLHM.put("REQUEST", requestLHM);
+		LinkedHashMap<String, Object> replyLHM = new LinkedHashMap<String, Object>();
+		replyLHM.put("REQUEST", requestLHM);
+		replyLHM.put("RESPONSE", responceLHM);
 		responceLHM.put("OS", osName);
 		responceLHM.put(CMD, cmd);
 
@@ -51,8 +53,7 @@ public class SystemCalls {
 				while ((line = bufferedreader.readLine()) != null) {
 					cmdBufferResp.append(line);
 				}
-				String cmdResp = formatResp((String) requestLHM.get("MODE"), cmdBufferResp.toString());
-				responceLHM.put(CMD_RESP, cmdResp);
+				responceLHM.put(CMD_RESP, cmdBufferResp.toString());
 				System.out.println(line);
 				// Check for ls failure
 				try {
@@ -72,20 +73,6 @@ public class SystemCalls {
 			} catch (IOException e) {
 				responceLHM.put("ERROR IOException", e.toString());
 			}
-		return responceLHM;
-	}
-
-	private static String formatResp(String mode, String resp) {
-		switch (mode) {
-		case "HTML":
-			resp = resp.replaceAll("\n", "<BR>");
-			break;
-		case "TEXT":
-			resp = resp.replaceAll("<BR>", "\n");
-			break;
-		default:
-			break;
-		}
-		return resp;
+		return replyLHM;
 	}
 }

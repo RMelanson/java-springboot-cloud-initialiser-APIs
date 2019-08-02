@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import springboot.ci.services.GreetingService;
 
+@CrossOrigin("*")
 @RestController
 public class GreetingController {
 
     private static final String template = "Hello, %s!";
     private final AtomicLong counter = new AtomicLong();
 
-    @CrossOrigin()
     @RequestMapping("/greeting")
     public GreetingService greeting(@RequestParam(value="name", defaultValue="World") String name) {
         return new GreetingService(counter.incrementAndGet(),

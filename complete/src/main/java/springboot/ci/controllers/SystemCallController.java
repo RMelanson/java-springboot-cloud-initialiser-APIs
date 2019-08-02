@@ -12,33 +12,37 @@ import org.springframework.web.bind.annotation.RestController;
 
 import springboot.ci.services.SystemCalls;
 
+@CrossOrigin("*")
 @RestController
 public class SystemCallController {
 
 	static final String CMD = "SYSTEM CMD";
 
-    @CrossOrigin()
 	@GetMapping(value = "/system", produces = "application/json")
 	public Map<String, Object> systemGet(@RequestParam(value = "cmd", required = false, defaultValue = "") String cmd,
-			@RequestParam(value = "respMode", required = false, defaultValue = "HTML") String mode) {
+			@RequestParam(value = "parms", required = false, defaultValue = "{}") String parms) {
 		LinkedHashMap<String, Object> requestLHM = new LinkedHashMap<String, Object>();
 		requestLHM.put(CMD, cmd);
-		requestLHM.put("MODE", mode);
+		requestLHM.put("PARMS", parms);
 
-		System.out.println("EXECUTING CMD = " + requestLHM.toString());
+		System.out.println("EXECUTING GET CMD = " + requestLHM.toString());
 		LinkedHashMap<String, Object> responceLHM = SystemCalls.execSysCmd(requestLHM);
 
-		System.out.println("CMD RESPONSE = \n" + requestLHM.toString());
+		System.out.println("GET CMD RESPONSE = \n" + requestLHM.toString());
 		return responceLHM;
 	}
 
-    @CrossOrigin()
 	@PostMapping(value = "/system", produces = "application/json")
-	public Map<String, Object> systemPost(@RequestBody LinkedHashMap<String, Object> requestLHM) {
-		System.out.println("EXECUTING CMD = " + requestLHM.toString());
+	public Map<String, Object> systemPost(@RequestBody LinkedHashMap<String, Object> requestLHM,
+			@RequestParam(value = "cmd", required = false, defaultValue = "") String cmd,
+			@RequestParam(value = "parms", required = false, defaultValue = "{}") String parms) {
+		requestLHM.put(CMD, cmd);
+		requestLHM.put("PARMS", parms);
+
+		System.out.println("EXECUTING POST CMD = " + requestLHM.toString());
 		LinkedHashMap<String, Object> responceLHM = SystemCalls.execSysCmd(requestLHM);
 
-		System.out.println("CMD RESPONSE = \n" + requestLHM.toString());
+		System.out.println("POST CMD RESPONSE = \n" + requestLHM.toString());
 		return responceLHM;
 	}
 }
