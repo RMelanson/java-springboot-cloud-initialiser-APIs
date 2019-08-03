@@ -22,11 +22,23 @@ public class SystemCalls {
 		return lhm;
 	}
 
-	public static LinkedHashMap<String, Object> execSysCmd(LinkedHashMap<String, Object> requestLHM) {
+	public static LinkedHashMap<String, Object> execGet(LinkedHashMap<String, Object> requestLHM) {
+		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
+		execSysCmd(requestLHM,responceLHM);
+		return responceLHM;
+	}
+	
+	public static LinkedHashMap<String, Object> execPost(LinkedHashMap<String, Object> requestLHM) {
+		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
+		execSysCmd(requestLHM,responceLHM);
+		return responceLHM;
+	}
+
+    private static LinkedHashMap<String, Object> execSysCmd(LinkedHashMap<String, Object> requestLHM,
+    		LinkedHashMap<String, Object> responceLHM) {
 		Runtime r = Runtime.getRuntime();
 		String cmd = (String) requestLHM.get(CMD);
 		StringBuilder cmdBufferResp = new StringBuilder();
-		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> replyLHM = new LinkedHashMap<String, Object>();
 		replyLHM.put("REQUEST", requestLHM);
 		replyLHM.put("RESPONSE", responceLHM);

@@ -16,8 +16,20 @@ import springboot.ci.services.SystemCalls;
 @RestController
 public class SystemCallController {
 
-	static final String CMD = "SYSTEM CMD";
+	static final String CMD = "cmd";
+/*	
+	@GetMapping(value = "/parmsTest", produces = "application/json")
+	public Map<String, Object> parmsTest(@RequestParam LinkedHashMap<String, Object> requestLHM) {
+		
+		System.out.println("EXECUTING PARMS TEST = " + requestLHM.toString());
+		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
+		responseLHM.put("REQUEST", requestLHM);
 
+		System.out.println("GET CMD RESPONSE = \n" + requestLHM.toString());
+		return responseLHM;
+	}
+*/
+	
 	@GetMapping(value = "/system", produces = "application/json")
 	public Map<String, Object> systemGet(@RequestParam(value = "cmd", required = false, defaultValue = "") String cmd,
 			@RequestParam(value = "parms", required = false, defaultValue = "{}") String parms) {
@@ -26,7 +38,7 @@ public class SystemCallController {
 		requestLHM.put("PARMS", parms);
 
 		System.out.println("EXECUTING GET CMD = " + requestLHM.toString());
-		LinkedHashMap<String, Object> responceLHM = SystemCalls.execSysCmd(requestLHM);
+		LinkedHashMap<String, Object> responceLHM = SystemCalls.execGet(requestLHM);
 
 		System.out.println("GET CMD RESPONSE = \n" + requestLHM.toString());
 		return responceLHM;
@@ -40,7 +52,7 @@ public class SystemCallController {
 		requestLHM.put("PARMS", parms);
 
 		System.out.println("EXECUTING POST CMD = " + requestLHM.toString());
-		LinkedHashMap<String, Object> responceLHM = SystemCalls.execSysCmd(requestLHM);
+		LinkedHashMap<String, Object> responceLHM = SystemCalls.execPost(requestLHM);
 
 		System.out.println("POST CMD RESPONSE = \n" + requestLHM.toString());
 		return responceLHM;
