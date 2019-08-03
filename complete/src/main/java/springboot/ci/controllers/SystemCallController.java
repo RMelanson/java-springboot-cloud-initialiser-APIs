@@ -17,7 +17,6 @@ import springboot.ci.services.SystemCalls;
 public class SystemCallController {
 
 	static final String CMD = "cmd";
-/*	
 	@GetMapping(value = "/parmsTest", produces = "application/json")
 	public Map<String, Object> parmsTest(@RequestParam LinkedHashMap<String, Object> requestLHM) {
 		
@@ -28,8 +27,7 @@ public class SystemCallController {
 		System.out.println("GET CMD RESPONSE = \n" + requestLHM.toString());
 		return responseLHM;
 	}
-*/
-	
+
 	@GetMapping(value = "/system", produces = "application/json")
 	public Map<String, Object> systemGet(@RequestParam(value = "cmd", required = false, defaultValue = "") String cmd,
 			@RequestParam(value = "parms", required = false, defaultValue = "{}") String parms) {
