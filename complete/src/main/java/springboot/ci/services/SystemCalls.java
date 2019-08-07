@@ -15,40 +15,40 @@ public class SystemCalls {
 	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
 
-	static final String CMD = "SYSTEM CMD";
-	static final String CMD_RESP = "CMD RESPONSE";
+	static final String CMD = "CMD";
+	static final String CMD_RESP = "CMD responseLHM";
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
 	}
 
 	public static LinkedHashMap<String, Object> execGet(LinkedHashMap<String, Object> requestLHM) {
-		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
-		execSysCmd(requestLHM,responceLHM);
-		return responceLHM;
+		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
+		execSysCmd(requestLHM,responseLHM);
+		return responseLHM;
 	}
 	
 	public static LinkedHashMap<String, Object> execPost(LinkedHashMap<String, Object> requestLHM) {
-		LinkedHashMap<String, Object> responceLHM = new LinkedHashMap<String, Object>();
-		execSysCmd(requestLHM,responceLHM);
-		return responceLHM;
+		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
+		execSysCmd(requestLHM,responseLHM);
+		return responseLHM;
 	}
 
     private static LinkedHashMap<String, Object> execSysCmd(LinkedHashMap<String, Object> requestLHM,
-    		LinkedHashMap<String, Object> responceLHM) {
+    		LinkedHashMap<String, Object> responseLHM) {
 		Runtime r = Runtime.getRuntime();
 		String cmd = (String) requestLHM.get(CMD);
 		StringBuilder cmdBufferResp = new StringBuilder();
 		LinkedHashMap<String, Object> replyLHM = new LinkedHashMap<String, Object>();
 		replyLHM.put("REQUEST", requestLHM);
-		replyLHM.put("RESPONSE", responceLHM);
-		responceLHM.put("OS", osName);
-		responceLHM.put(CMD, cmd);
+		replyLHM.put("responseLHM", responseLHM);
+		responseLHM.put("OS", osName);
+		responseLHM.put(CMD, cmd);
 
 		if (StringUtils.isEmpty(cmd)) {
-			responceLHM = new LinkedHashMap<String, Object>();
-			responceLHM.put(CMD, "NULL");
-			responceLHM.put(CMD_RESP, "ERR: Please Enter Valid System Command");
+			responseLHM = new LinkedHashMap<String, Object>();
+			responseLHM.put(CMD, "NULL");
+			responseLHM.put(CMD_RESP, "ERR: Please Enter Valid System Command");
 		} else
 			try {
 				/*
@@ -65,15 +65,15 @@ public class SystemCalls {
 				while ((line = bufferedreader.readLine()) != null) {
 					cmdBufferResp.append(line);
 				}
-				responceLHM.put(CMD_RESP, cmdBufferResp.toString());
+				responseLHM.put(CMD_RESP, cmdBufferResp.toString());
 				System.out.println(line);
 				// Check for ls failure
 				try {
 					if (p.waitFor() != 0) {
-						responceLHM.put("ERR: waitFor()", p.exitValue());
+						responseLHM.put("ERR: waitFor()", p.exitValue());
 					}
 				} catch (InterruptedException e) {
-					responceLHM.put("ERR: InterruptedException", e.toString());
+					responseLHM.put("ERR: InterruptedException", e.toString());
 					System.err.println(e);
 				} finally {
 					// Close the InputStream
@@ -83,8 +83,17 @@ public class SystemCalls {
 					in.close();
 				}
 			} catch (IOException e) {
-				responceLHM.put("ERROR IOException", e.toString());
+				responseLHM.put("ERROR IOException", e.toString());
 			}
 		return replyLHM;
 	}
+
+	public static void setUpperCaseKeys(Map<String, Object> mp){
+		for (String key : mp.keySet()) {
+			Object value = mp.get(key);
+			mp.remove(key);
+			mp.put(key.toUpperCase(),value);
+		}
+	}
+
 }
