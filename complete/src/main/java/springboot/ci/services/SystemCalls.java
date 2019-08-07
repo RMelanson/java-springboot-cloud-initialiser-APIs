@@ -88,6 +88,25 @@ public class SystemCalls {
 		return replyLHM;
 	}
 
+	public static LinkedHashMap<String, Object> mergeAndSetUpperCaseKeys(LinkedHashMap<String, Object> requestParms,
+			LinkedHashMap<String, Object> requestBody) {
+		LinkedHashMap<String, Object> responseParms = new LinkedHashMap<String, Object>();
+		for (String key : requestBody.keySet()) {
+			Object value = requestBody.get(key);
+			responseParms.put(key, value);
+		}
+		for (String key : requestParms.keySet()) {
+			Object value = requestParms.get(key);
+			responseParms.put(key,value);
+		}
+		for (String key : requestBody.keySet()) {
+			Object value = requestBody.get(key);
+			responseParms.put(key,value);
+		}
+		setUpperCaseKeys(responseParms);
+		return responseParms;
+	}
+
 	public static void setUpperCaseKeys(Map<String, Object> mp){
 		for (String key : mp.keySet()) {
 			Object value = mp.get(key);

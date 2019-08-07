@@ -51,7 +51,7 @@ public class AliveTestController {
 	}
 
 	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+		AliveTestController.protocol = protocol;
 	}
 
 	public String getHostName() {

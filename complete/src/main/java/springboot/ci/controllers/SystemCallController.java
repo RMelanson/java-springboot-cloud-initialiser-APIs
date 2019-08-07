@@ -22,60 +22,70 @@ public class SystemCallController {
 	// GET MAPPINGS
 	
 	@GetMapping(value = "/parmsTest", produces = "application/json")
-	public Map<String, Object> parmsGetTest(@RequestParam LinkedHashMap<String, Object> requestLHM) {
+	public Map<String, Object> parmsGetTest(@RequestParam LinkedHashMap<String, Object> requestParms) {
 
-		System.out.println("EXECUTING PARMS TEST = " + requestLHM.toString());
-		SystemCalls.setUpperCaseKeys(requestLHM);
+		System.out.println("EXECUTING PARMS TEST = " + requestParms.toString());
+		SystemCalls.setUpperCaseKeys(requestParms);
 
 		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
-		responseLHM.put("REQUEST", requestLHM);
+		responseLHM.put("REQUEST PARMS", requestParms);
 
-		System.out.println("GET CMD responseLHM = \n" + requestLHM.toString());
+		System.out.println("GET CMD responseLHM = \n" + requestParms.toString());
 		return responseLHM;
 	}
 
 	@GetMapping(value = "/system", produces = "application/json")
-	public Map<String, Object> systemGet(@RequestParam LinkedHashMap<String, Object> requestLHM) {
+	public Map<String, Object> systemGet(@RequestParam LinkedHashMap<String, Object> requestParms) {
 
-		System.out.println("EXECUTING GET CMD = " + requestLHM.toString());
+		System.out.println("EXECUTING GET CMD = " + requestParms.toString());
 
-		SystemCalls.setUpperCaseKeys(requestLHM);
+		SystemCalls.setUpperCaseKeys(requestParms);
 
-		Set<String> keys = requestLHM.keySet();
+		Set<String> keys = requestParms.keySet();
 		keys.parallelStream();
 
-		LinkedHashMap<String, Object> responseLHM = SystemCalls.execGet(requestLHM);
+		LinkedHashMap<String, Object> responseLHM = SystemCalls.execGet(requestParms);
 
-		System.out.println("GET CMD responseLHM = \n" + requestLHM.toString());
+		System.out.println("GET CMD responseLHM = \n" + requestParms.toString());
 		return responseLHM;
 	}
 
 	// POST MAPPINGS
 
 	@PostMapping(value = "/parmsTest", produces = "application/json")
-	public Map<String, Object> parmsPostTest(@RequestParam LinkedHashMap<String, Object> requestPARMS,
-			@RequestBody LinkedHashMap<String, Object> requestLHM) {
+	public Map<String, Object> parmsPostTest(@RequestParam LinkedHashMap<String, Object> requestParms,
+			@RequestBody LinkedHashMap<String, Object> requestBody) {
 		
-		System.out.println("EXECUTING PARMS TEST = " + requestLHM.toString());
-		SystemCalls.setUpperCaseKeys(requestLHM);
+		System.out.println("EXECUTING PARMS TEST = " + requestParms.toString());
+		System.out.println("EXECUTING BODY TEST = " + requestBody.toString());
+		LinkedHashMap<String, Object> responseParms = SystemCalls.mergeAndSetUpperCaseKeys(requestParms, requestBody);
 
-		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
-		responseLHM.put("REQUEST", requestLHM);
+		LinkedHashMap<String, Object> resultsMap = new LinkedHashMap<String, Object>();
+		resultsMap.put("REQUEST PARMS", requestParms);
+		resultsMap.put("REQUEST BODY", requestParms);
+		
+		resultsMap.put("RESPONSE PARMS", responseParms);
 
-		System.out.println("GET CMD responseLHM = \n" + requestLHM.toString());
-		return responseLHM;
+		System.out.println("GET CMD responseParms = \n" + responseParms.toString());
+		return resultsMap;
 	}
 
 	@PostMapping(value = "/system", produces = "application/json")
-	public Map<String, Object> systemPost(@RequestParam LinkedHashMap<String, Object> requestPARMS,
-			@RequestBody LinkedHashMap<String, Object> requestLHM) {
+	public Map<String, Object> systemPost(@RequestParam LinkedHashMap<String, Object> requestParms,
+			@RequestBody LinkedHashMap<String, Object> requestBody) {
 
-		SystemCalls.setUpperCaseKeys(requestLHM);
+		System.out.println("EXECUTING PARMS TEST = " + requestParms.toString());
+		System.out.println("EXECUTING BODY TEST = " + requestBody.toString());
+		LinkedHashMap<String, Object> responseParms = SystemCalls.mergeAndSetUpperCaseKeys(requestParms, requestBody);
 
-		System.out.println("EXECUTING POST CMD = " + requestLHM.toString());
-		LinkedHashMap<String, Object> responseLHM = SystemCalls.execPost(requestLHM);
+		LinkedHashMap<String, Object> resultsMap = new LinkedHashMap<String, Object>();
+		resultsMap.put("REQUEST PARMS", requestParms);
+		resultsMap.put("REQUEST BODY", requestParms);
+		
+		resultsMap.put("RESPONSE PARMS", responseParms);
 
-		System.out.println("POST CMD responseLHM = \n" + requestLHM.toString());
-		return responseLHM;
+		System.out.println("GET CMD responseParms = \n" + responseParms.toString());
+		return resultsMap;
 	}
+	
 }
