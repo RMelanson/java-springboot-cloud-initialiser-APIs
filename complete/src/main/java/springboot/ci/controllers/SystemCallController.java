@@ -62,7 +62,7 @@ public class SystemCallController {
 
 		LinkedHashMap<String, Object> resultsMap = new LinkedHashMap<String, Object>();
 		resultsMap.put("REQUEST PARMS", requestParms);
-		resultsMap.put("REQUEST BODY", requestParms);
+		resultsMap.put("REQUEST BODY", requestBody);
 		
 		resultsMap.put("RESPONSE PARMS", responseParms);
 
@@ -80,7 +80,7 @@ public class SystemCallController {
 
 		LinkedHashMap<String, Object> resultsMap = new LinkedHashMap<String, Object>();
 		resultsMap.put("REQUEST PARMS", requestParms);
-		resultsMap.put("REQUEST BODY", requestParms);
+		resultsMap.put("REQUEST BODY", requestBody);
 		
 		resultsMap.put("RESPONSE PARMS", responseParms);
 

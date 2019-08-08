@@ -5,8 +5,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.util.StringUtils;
 
@@ -91,10 +93,6 @@ public class SystemCalls {
 	public static LinkedHashMap<String, Object> mergeAndSetUpperCaseKeys(LinkedHashMap<String, Object> requestParms,
 			LinkedHashMap<String, Object> requestBody) {
 		LinkedHashMap<String, Object> responseParms = new LinkedHashMap<String, Object>();
-		for (String key : requestBody.keySet()) {
-			Object value = requestBody.get(key);
-			responseParms.put(key, value);
-		}
 		for (String key : requestParms.keySet()) {
 			Object value = requestParms.get(key);
 			responseParms.put(key,value);
@@ -108,7 +106,8 @@ public class SystemCalls {
 	}
 
 	public static void setUpperCaseKeys(Map<String, Object> mp){
-		for (String key : mp.keySet()) {
+		Set<String> keySet = new HashSet<String>(mp.keySet());
+		for (String key : keySet) {
 			Object value = mp.get(key);
 			mp.remove(key);
 			mp.put(key.toUpperCase(),value);
