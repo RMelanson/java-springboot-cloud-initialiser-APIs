@@ -17,40 +17,25 @@ public class SystemCalls {
 	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
 
-	static final String CMD = "CMD";
-	static final String CMD_RESP = "CMD responseLHM";
+	static final String CMD = "cmd";
+	static final String DATA = "DATA";
+	static final String ERROR = "ERROR";
+	static final String RESPONSE = "RESPONSE";
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
 	}
 
-	public static LinkedHashMap<String, Object> execGet(LinkedHashMap<String, Object> requestLHM) {
-		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
-		execSysCmd(requestLHM,responseLHM);
-		return responseLHM;
-	}
-	
-	public static LinkedHashMap<String, Object> execPost(LinkedHashMap<String, Object> requestLHM) {
-		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
-		execSysCmd(requestLHM,responseLHM);
-		return responseLHM;
-	}
-
-    private static LinkedHashMap<String, Object> execSysCmd(LinkedHashMap<String, Object> requestLHM,
-    		LinkedHashMap<String, Object> responseLHM) {
+	private static LinkedHashMap<Integer, Object> execSysCmd(LinkedHashMap<String, Object> buildParms) {
 		Runtime r = Runtime.getRuntime();
-		String cmd = (String) requestLHM.get(CMD);
-		StringBuilder cmdBufferResp = new StringBuilder();
-		LinkedHashMap<String, Object> replyLHM = new LinkedHashMap<String, Object>();
-		replyLHM.put("REQUEST", requestLHM);
-		replyLHM.put("responseLHM", responseLHM);
-		responseLHM.put("OS", osName);
-		responseLHM.put(CMD, cmd);
+		String cmd = (String) buildParms.get(CMD);
+//		StringBuilder cmdBufferResp = new StringBuilder();
+//		Linked
+		LinkedHashMap<Integer, Object> resultDataMap = new LinkedHashMap<Integer, Object>();
 
 		if (StringUtils.isEmpty(cmd)) {
-			responseLHM = new LinkedHashMap<String, Object>();
-			responseLHM.put(CMD, "NULL");
-			responseLHM.put(CMD_RESP, "ERR: Please Enter Valid System Command");
+			buildParms = new LinkedHashMap<String, Object>();
+			buildParms.put(ERROR, "Empty System Command");
 		} else
 			try {
 				/*
@@ -64,18 +49,18 @@ public class SystemCalls {
 
 				// Read the ls output
 				String line;
+				Integer lnCnt=0;
 				while ((line = bufferedreader.readLine()) != null) {
-					cmdBufferResp.append(line);
+					resultDataMap.put(++lnCnt, line);
 				}
-				responseLHM.put(CMD_RESP, cmdBufferResp.toString());
 				System.out.println(line);
 				// Check for ls failure
 				try {
 					if (p.waitFor() != 0) {
-						responseLHM.put("ERR: waitFor()", p.exitValue());
+						buildParms.put("ERR: waitFor()", p.exitValue());
 					}
 				} catch (InterruptedException e) {
-					responseLHM.put("ERR: InterruptedException", e.toString());
+					buildParms.put("ERR: InterruptedException", e.toString());
 					System.err.println(e);
 				} finally {
 					// Close the InputStream
@@ -85,33 +70,73 @@ public class SystemCalls {
 					in.close();
 				}
 			} catch (IOException e) {
-				responseLHM.put("ERROR IOException", e.toString());
+				buildParms.put("ERROR IOException", e.toString());
 			}
-		return replyLHM;
+		return resultDataMap;
 	}
 
-	public static LinkedHashMap<String, Object> mergeAndSetUpperCaseKeys(LinkedHashMap<String, Object> requestParms,
+	public static LinkedHashMap<String, Object> getResponseLHM(String api, String method,
+			LinkedHashMap<String, Object> requestParms) {
+		return postResponseLHM(api, method, requestParms, null);
+	}
+
+	public static LinkedHashMap<String, Object> postResponseLHM(String api, String method,
+			LinkedHashMap<String, Object> requestParms, LinkedHashMap<String, Object> requestBody) {
+		long startMillis = System.currentTimeMillis();
+
+		System.out.println("Executing " + api + "API " + method + " Method" + "\nrequestParms : " + requestParms
+				+ "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
+
+		LinkedHashMap<String, Object> buildParms = getNewMergedBodyParms(requestParms, requestBody);
+		LinkedHashMap<String, Object> requestLHM = new LinkedHashMap<String, Object>();
+		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
+		LinkedHashMap<String, Object> metaData = new LinkedHashMap<String, Object>();
+
+		requestLHM.put("API", api);
+		requestLHM.put("METHOD", method);
+		requestLHM.put("PARMS", requestParms);
+		responseLHM.put("REQUEST", requestLHM);
+		responseLHM.put("META", metaData);
+		metaData.put("SERVER OS", osName);
+		if (!StringUtils.isEmpty(requestBody)) {
+			requestLHM.put("BODY", requestBody);
+		}
+		// Start API Processing
+		responseLHM.put(RESPONSE, SystemCalls.execSysCmd(buildParms));
+
+		// END API Processing
+
+		long elapseTimeMS = System.currentTimeMillis() - startMillis;
+		metaData.put("PROCESSING TIME (MS)", elapseTimeMS);
+
+		System.out.println("ResponseLHM = \n" + responseLHM.toString());
+		return responseLHM;
+	}
+
+	public static LinkedHashMap<String, Object> getNewMergedBodyParms(LinkedHashMap<String, Object> requestParms,
 			LinkedHashMap<String, Object> requestBody) {
-		LinkedHashMap<String, Object> responseParms = new LinkedHashMap<String, Object>();
-		for (String key : requestParms.keySet()) {
-			Object value = requestParms.get(key);
-			responseParms.put(key,value);
-		}
-		for (String key : requestBody.keySet()) {
-			Object value = requestBody.get(key);
-			responseParms.put(key,value);
-		}
-		setUpperCaseKeys(responseParms);
-		return responseParms;
+		LinkedHashMap<String, Object> buildParms = new LinkedHashMap<String, Object>();
+
+		if (requestParms != null)
+			for (String key : requestParms.keySet()) {
+				Object value = requestParms.get(key);
+				buildParms.put(key, value);
+			}
+
+		if (requestBody != null)
+			for (String key : requestBody.keySet()) {
+				Object value = requestBody.get(key);
+				buildParms.put(key, value);
+			}
+		return buildParms;
 	}
 
-	public static void setUpperCaseKeys(Map<String, Object> mp){
+	public static void setUpperCaseKeys(Map<String, Object> mp) {
 		Set<String> keySet = new HashSet<String>(mp.keySet());
 		for (String key : keySet) {
 			Object value = mp.get(key);
 			mp.remove(key);
-			mp.put(key.toUpperCase(),value);
+			mp.put(key.toUpperCase(), value);
 		}
 	}
-
 }
