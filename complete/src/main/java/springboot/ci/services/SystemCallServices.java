@@ -12,7 +12,7 @@ import java.util.Set;
 
 import org.springframework.util.StringUtils;
 
-public class SystemCalls {
+public class SystemCallServices {
 
 	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
@@ -102,7 +102,7 @@ public class SystemCalls {
 			requestLHM.put("BODY", requestBody);
 		}
 		// Start API Processing
-		responseLHM.put(RESPONSE, SystemCalls.execSysCmd(buildParms));
+		responseLHM.put(RESPONSE, SystemCallServices.execSysCmd(buildParms));
 
 		// END API Processing
 
