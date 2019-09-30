@@ -20,15 +20,17 @@ public class InstallServices {
 	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
 
-	static final String CMD          = "cmd";
-	static final String DATA         = "DATA";
-	static final String ERROR        = "ERROR";
-	static final String RESPONSE     = "RESPONSE";
-	static final String APP          = "app";
-	static final String GIT_PROTOCOL = "GIT";
-	static final String GIT_DOMAIN   = "github.com";
-	static final String GIT_ACCOUNT  = "RMelanson";
-	static final String GIT_FRMT     = "%s@%s:%s/%s.git";
+	static final String CMD = "cmd";
+	static final String DATA = "DATA";
+	static final String ERROR = "ERROR";
+	static final String RESPONSE = "RESPONSE";
+	static final String APP = "app";
+	static final String GIT_PROTOCOL = "git";
+	static final String GIT_DOMAIN = "github.com";
+	static final String GIT_ACCOUNT = "RMelanson";
+	static final String GIT_FRMT = "%s@%s:%s/%s.git";
+	static final String CI_DIR = "/opt/CI";
+	static final String CI_BOOTSTRAP_DIR = CI_DIR + "/bootstraps";
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
@@ -36,7 +38,7 @@ public class InstallServices {
 
 	private static boolean isValid(String app) {
 		if (StringUtils.isEmpty(app))
-		   return false;
+			return false;
 		return true;
 	}
 
@@ -45,12 +47,12 @@ public class InstallServices {
 		// APPS
 		appRepoMap.put("WORDPRESS", "linux-scripts-apps-wordpress");
 		appRepoMap.put("LINUX-SCRIPTS-APPS-WORDPRESS", "linux-scripts-apps-wordpress");
-		//SERVERS
+		// SERVERS
 		appRepoMap.put("HTTP", "linux-scripts-server-http");
 		appRepoMap.put("LINUX-SCRIPTS-APPS-HTTP", "linux-scripts-server-http");
 		appRepoMap.put("JBOSS", "linux-scripts-server-jboss");
 		appRepoMap.put("LINUX-SCRIPTS-APPS-JBOSS", "linux-scripts-server-jboss");
-		//DB
+		// DB
 		appRepoMap.put("ORACLE", "linux-scripts-db-oracle");
 		appRepoMap.put("LINUX-SCRIPTS-APPS-ORACLE", "linux-scripts-db-oracle");
 		appRepoMap.put("MYSQL", "linux-scripts-db-mysql");
@@ -74,71 +76,78 @@ public class InstallServices {
 		// TOOLS
 		appRepoMap.put("MAVEN", "linux-scripts-tools-maven");
 		appRepoMap.put("LINUX-SCRIPTS-TOOLS-MAVEN", "linux-scripts-tools-maven");
-		
+
 		appRepoMap.put("DOCKER", "linux-scripts-devops-docker");
 		appRepoMap.put("LINUX-SCRIPTS-DEVOPS-DOCKER", "linux-scripts-devops-docker");
-		
+
 		appRepoMap.put("JENKINS", "linux-scripts-devops-jenkins");
 		appRepoMap.put("LINUX-SCRIPTS-DEVOPS-JENKINS", "linux-scripts-devops-jenkins");
-		
+
 		appRepoMap.put("GIT", "linux-scripts-devops-git");
 		appRepoMap.put("LINUX-SCRIPTS-DEVOPS-GIT", "linux-scripts-devops-git");
-		
+
 		appRepoMap.put("LINUX-ADMIN", "linux-scripts-devops-linux-admin");
 		appRepoMap.put("LINUX-SCRIPTS-DEVOPS-LINUX-ADMIN", "linux-scripts-devops-linux-admin");
-		
+
 		appRepoMap.put("STORAGE-S3SF", "linux-scripts-aws-storage-s3sf");
 		appRepoMap.put("LINUX-SCRIPTS-DEVOPS-STORAGE-S3SF", "linux-scripts-aws-storage-s3sf");
-		
+
 		appRepoMap.put("TEST", "linux-scripts-test");
 		appRepoMap.put("LINUX-SCRIPTS-TEST", "linux-scripts-test");
 	}
 
-	private static String cloneApp(String app) {
+	private static String gitCloneURL(String app) {
 		if (!isValid(app))
 			return null;
-		
+
 		String appRepo = appRepoMap.get(app.toUpperCase());
 		if (!isValid(appRepo))
 			return null;
-		
-		String gitRepo = String.format(GIT_FRMT, GIT_PROTOCOL,GIT_DOMAIN,GIT_ACCOUNT,appRepo);
+
+		String gitRepo = String.format(GIT_FRMT, GIT_PROTOCOL, GIT_DOMAIN, GIT_ACCOUNT, appRepo);
 		return gitRepo;
 	}
 
-	private static String installApp(LinkedHashMap<String, Object> buildParms) {
+	private static String gitBootstrapInstallDir(String app) {
+		if (!isValid(app))
+			return null;
+
+		String appRepo = appRepoMap.get(app.toUpperCase());
+		if (!isValid(appRepo))
+			return null;
+		appRepo = appRepo.replace("linux-scripts-", "/").replace("-", "/");
+
+		String gitRepo = CI_BOOTSTRAP_DIR + appRepo;
+		return gitRepo;
+	}
+
+	private static String execSysCmd(String cmd) {
 		String installresponse = "";
-		Runtime r = Runtime.getRuntime();
-		String app = (String) buildParms.get(APP);
-		String cmd = cloneApp(app);
-		System.out.println("CMD = "+cmd);
+		System.out.println("CMD = " + cmd);
 
 		if (isValid(cmd)) {
-			if (StringUtils.isEmpty(cmd)) {
-				buildParms = new LinkedHashMap<String, Object>();
-				buildParms.put(ERROR, "Empty System Command");
-			} else
+			{
+				/*
+				 * Here we are executing the System Command. Returning the result as a String
+				 */
 				try {
-					/*
-					 * Here we are executing the System Command. Returning the result as a String
-					 */
+					Runtime r = Runtime.getRuntime();
 					Process p = r.exec(cmd);
 					InputStream in = p.getInputStream();
 					BufferedInputStream buf = new BufferedInputStream(in);
 					InputStreamReader inread = new InputStreamReader(buf);
 					BufferedReader bufferedreader = new BufferedReader(inread);
 
-					// TESTING AREA
 					installresponse = IOUtils.toString(bufferedreader);
 
 					System.out.println(installresponse);
-					// Check for ls failure
+					// Check for cmd failure
 					try {
 						if (p.waitFor() != 0) {
-							buildParms.put("ERR: waitFor()", p.exitValue());
+							installresponse = "*ERR: waitFor()" + p.exitValue();
 						}
 					} catch (InterruptedException e) {
-						buildParms.put("ERR: InterruptedException", e.toString());
+						installresponse = "*ERR: InterruptedException" + e.toString();
 						System.err.println(e);
 					} finally {
 						// Close the InputStream
@@ -148,10 +157,71 @@ public class InstallServices {
 						in.close();
 					}
 				} catch (IOException e) {
-					buildParms.put("ERROR IOException", e.toString());
+					installresponse = "*ERR IOException" + e.toString();
 				}
+			}
 		} else
-			installresponse = "*** ERROR*** Application not available for installation";
+			installresponse = "*ERR Application not available for installation";
+		return installresponse;
+	}
+
+	private static String installApp(LinkedHashMap<String, Object> buildParms) {
+		String installresponse = "";
+		String cmd = (String) buildParms.get(APP);
+		System.out.println("HERE 1 cmd = "+cmd);
+
+		String[] cmdLineParts = cmd.split("?");
+		System.out.println("HERE 1.1 cmdLineParts = "+cmdLineParts.toString());
+		if (cmdLineParts.length > 0) {
+			String app = cmdLineParts[0];
+			System.out.println("HERE 2");
+
+			if (isValid(app)) {
+				System.out.println("HERE 3");
+				String cloneApp = cloneApp(app);
+				if (isValid(cloneApp)) {
+					cloneApp(app);
+				} else {
+					installresponse = "**ERR** app = " + app + " Has no Registered git repository";
+					return cloneApp(app);
+				}
+			} else {
+				installresponse = "**ERR** Invalid app = " + app;
+			}
+			return installresponse;
+		}
+		if (cmdLineParts.length > 0) {
+			String setupCmd = cmdLineParts[1];
+			runSetup(setupCmd);
+		}
+		System.out.println("HERE 4");
+		return installresponse;
+	}
+
+	private static void runSetup(String setupCmd) {
+		// TODO Auto-generated method stub
+		System.out.println("HERE 3.2 setupCmd = " + setupCmd);
+	}
+
+	private static String cloneApp(String app) {
+		String installresponse = "";
+
+		String cloneURL = gitCloneURL(app);
+
+		if (isValid(cloneURL)) {
+			String bootstrapInstallDir = gitBootstrapInstallDir(app);
+			String gitCloneCmd = "git clone " + cloneURL + " " + bootstrapInstallDir;
+
+			/*
+			 * Here we are executing the git Clone System Command. Returning the result as a
+			 * String
+			 */
+			installresponse += execSysCmd(gitCloneCmd);
+			if (StringUtils.isEmpty(installresponse))
+				installresponse = "Installation Successfully installed in:" + bootstrapInstallDir;
+		} else {
+			installresponse = "**ERR** app = " + app + " Repository Not Found";
+		}
 		return installresponse;
 	}
 
