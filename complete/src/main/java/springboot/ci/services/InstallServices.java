@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -167,40 +168,32 @@ public class InstallServices {
 
 	private static String installApp(LinkedHashMap<String, Object> buildParms) {
 		String installresponse = "";
-		String cmd = (String) buildParms.get(APP);
-		System.out.println("HERE 1 cmd = "+cmd);
-
-		String[] cmdLineParts = cmd.split("?");
-		System.out.println("HERE 1.1 cmdLineParts = "+cmdLineParts.toString());
-		if (cmdLineParts.length > 0) {
-			String app = cmdLineParts[0];
-			System.out.println("HERE 2");
-
-			if (isValid(app)) {
-				System.out.println("HERE 3");
-				String cloneApp = cloneApp(app);
-				if (isValid(cloneApp)) {
-					cloneApp(app);
-				} else {
-					installresponse = "**ERR** app = " + app + " Has no Registered git repository";
-					return cloneApp(app);
+		String request = (String) buildParms.get(APP);
+		String parts = request.replace("?", "&");
+		String[] cmdLineParts = parts.split("&");
+		if (cmdLineParts.length > 1) {
+			String apiURL = cmdLineParts[0];
+			String app = cmdLineParts[1];
+			installresponse = cloneApp(app);
+			if (installresponse.length() > 1)
+				return installresponse;
+			else {
+				String parms = "";
+				if (cmdLineParts.length > 2) {
+					String[] parmsArr = Arrays.copyOfRange(cmdLineParts, 2, cmdLineParts.length);
+					 for (Object parm : parmsArr) { 
+						 parms += " "+(String)parm; 
+				        } 
+					 runSetup(app+parms);
 				}
-			} else {
-				installresponse = "**ERR** Invalid app = " + app;
 			}
-			return installresponse;
 		}
-		if (cmdLineParts.length > 0) {
-			String setupCmd = cmdLineParts[1];
-			runSetup(setupCmd);
-		}
-		System.out.println("HERE 4");
 		return installresponse;
 	}
 
 	private static void runSetup(String setupCmd) {
 		// TODO Auto-generated method stub
-		System.out.println("HERE 3.2 setupCmd = " + setupCmd);
+		System.out.println("RUNNING setupCmd = " + setupCmd);
 	}
 
 	private static String cloneApp(String app) {
