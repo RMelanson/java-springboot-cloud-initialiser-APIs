@@ -41,7 +41,8 @@ public class TestController {
 			@RequestBody LinkedHashMap<String, Object> requestBody) {
 		
 		LinkedHashMap<String, Object> responseLHM = SystemCallServices.postResponseLHM("/parmsTest", "Get", requestParms, requestBody);
-		return responseLHM;
+		return requestBody;
+//		return responseLHM;
 	}
 
 }

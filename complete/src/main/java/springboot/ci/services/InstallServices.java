@@ -166,28 +166,27 @@ public class InstallServices {
 		return installresponse;
 	}
 
-	private static String installApp(LinkedHashMap<String, Object> buildParms) {
+	private static String installApp(String app, LinkedHashMap<String, Object> buildParms) {
 		String installresponse = "";
-		String request = (String) buildParms.get(APP);
-		String parts = request.replace("?", "&");
-		String[] cmdLineParts = parts.split("&");
-		if (cmdLineParts.length > 1) {
-			String apiURL = cmdLineParts[0];
-			String app = cmdLineParts[1];
-			installresponse = cloneApp(app);
-			if (installresponse.length() > 1)
-				return installresponse;
-			else {
-				String parms = "";
-				if (cmdLineParts.length > 2) {
-					String[] parmsArr = Arrays.copyOfRange(cmdLineParts, 2, cmdLineParts.length);
-					 for (Object parm : parmsArr) { 
-						 parms += " "+(String)parm; 
-				        } 
-					 runSetup(app+parms);
-				}
-			}
-		}
+		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",","");
+		String gitRepo = gitCloneURL(app);
+		String shellScript = "./"+app+".sh " +parms;
+//		if (cmdLineParts.length > 1) {
+//			installresponse = cloneApp(app);
+//			if (installresponse.length() > 1)
+//				return installresponse;
+//			else {
+//				String parms = "";
+//				if (cmdLineParts.length > 2) {
+//					String[] parmsArr = Arrays.copyOfRange(cmdLineParts, 2, cmdLineParts.length);
+//					 for (Object parm : parmsArr) { 
+//						 parms += " "+(String)parm; 
+//				        } 
+//					 runSetup(app+parms);
+//				}
+//			}
+//		}
+		installresponse = shellScript;
 		return installresponse;
 	}
 
@@ -218,16 +217,16 @@ public class InstallServices {
 		return installresponse;
 	}
 
-	public static LinkedHashMap<String, Object> getResponseLHM(String api, String method,
+	public static LinkedHashMap<String, Object> getResponseLHM(String api, String app, String method,
 			LinkedHashMap<String, Object> requestParms) {
-		return postResponseLHM(api, method, requestParms, null);
+		return postResponseLHM(api, app, method, requestParms, null);
 	}
 
-	public static LinkedHashMap<String, Object> postResponseLHM(String api, String method,
+	public static LinkedHashMap<String, Object> postResponseLHM(String api, String app, String method,
 			LinkedHashMap<String, Object> requestParms, LinkedHashMap<String, Object> requestBody) {
 		long startMillis = System.currentTimeMillis();
 
-		System.out.println("Executing " + api + "API " + method + " Method" + "\nrequestParms : " + requestParms
+		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : " + requestParms
 				+ "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
 
 		LinkedHashMap<String, Object> buildParms = getNewMergedBodyParms(requestParms, requestBody);
@@ -236,6 +235,7 @@ public class InstallServices {
 		LinkedHashMap<String, Object> metaData = new LinkedHashMap<String, Object>();
 
 		requestLHM.put("API", api);
+		requestLHM.put("APP", app);
 		requestLHM.put("METHOD", method);
 		requestLHM.put("PARMS", requestParms);
 		responseLHM.put("REQUEST", requestLHM);
@@ -245,7 +245,7 @@ public class InstallServices {
 			requestLHM.put("BODY", requestBody);
 		}
 		// Start API Processing
-		responseLHM.put(RESPONSE, InstallServices.installApp(buildParms));
+		responseLHM.put(RESPONSE, InstallServices.installApp(app, buildParms));
 
 		// END API Processing
 

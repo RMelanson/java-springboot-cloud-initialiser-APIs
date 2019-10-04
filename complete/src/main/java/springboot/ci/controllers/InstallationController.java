@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,19 +21,19 @@ public class InstallationController {
 
 	// GET MAPPINGS
 	
-	@GetMapping(value = "/install", produces = "application/json")
-	public Map<String, Object> systemGet(@RequestParam LinkedHashMap<String, Object> requestParms) {
-		LinkedHashMap<String, Object> responseLHM = InstallServices.getResponseLHM("/install", "Get", requestParms);
+	@GetMapping(value = "/install/{app}", produces = "application/json")
+	public Map<String, Object> systemGet(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app) {
+		LinkedHashMap<String, Object> responseLHM = InstallServices.getResponseLHM("/install", app, "Get", requestParms);
 		return responseLHM;
 	}
 
 	// POST MAPPINGS
 
-	@PostMapping(value = "/install", produces = "application/json")
-	public Map<String, Object> systemPost(@RequestParam LinkedHashMap<String, Object> requestParms,
+	@PostMapping(value = "/install/{app}", produces = "application/json")
+	public Map<String, Object> systemPost(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app,
 			@RequestBody LinkedHashMap<String, Object> requestBody) {
 
-		LinkedHashMap<String, Object> responseLHM = InstallServices.postResponseLHM("/install", "Get", requestParms, requestBody);
+		LinkedHashMap<String, Object> responseLHM = InstallServices.postResponseLHM("/install", app, "Get", requestParms, requestBody);
 		return responseLHM;
 	}
 }

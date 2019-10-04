@@ -15,6 +15,16 @@
 	</parent>
 
 	<dependencies>
+		<!-- Start pepBoys repository -->
+		<!-- https://mvnrepository.com/artifact/de.odysseus.staxon/staxon -->
+		<!-- https://mvnrepository.com/artifact/org.json/json -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20190722</version>
+		</dependency>
+		<!-- End pepBoys repository -->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
