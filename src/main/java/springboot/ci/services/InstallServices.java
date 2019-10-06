@@ -166,11 +166,16 @@ public class InstallServices {
 		return installresponse;
 	}
 
+	private static String cloneAPP(String gitCloneCmd) {
+		execSysCmd(gitCloneCmd);
+		return null;
+	}
+
 	private static String installApp(String app, LinkedHashMap<String, Object> buildParms) {
 		String installresponse = "";
-		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",","");
+		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
 		String gitRepo = gitCloneURL(app);
-		String shellScript = "./"+app+".sh " +parms;
+		String shellScript = "./" + app + ".sh " + parms;
 //		if (cmdLineParts.length > 1) {
 //			installresponse = cloneApp(app);
 //			if (installresponse.length() > 1)
@@ -190,31 +195,33 @@ public class InstallServices {
 		return installresponse;
 	}
 
+	private static String installCMD(String app, LinkedHashMap<String, Object> buildParms) {
+		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
+		String gitRepo = gitCloneURL(app);
+		String shellScript = "./" + app + ".sh " + parms;
+		return shellScript;
+	}
+
 	private static void runSetup(String setupCmd) {
 		// TODO Auto-generated method stub
 		System.out.println("RUNNING setupCmd = " + setupCmd);
 	}
 
-	private static String cloneApp(String app) {
-		String installresponse = "";
+	private static String gitCloneCMD(String app) {
+		String gitCloneCmd = "";
 
 		String cloneURL = gitCloneURL(app);
 
 		if (isValid(cloneURL)) {
 			String bootstrapInstallDir = gitBootstrapInstallDir(app);
-			String gitCloneCmd = "git clone " + cloneURL + " " + bootstrapInstallDir;
-
-			/*
-			 * Here we are executing the git Clone System Command. Returning the result as a
-			 * String
-			 */
-			installresponse += execSysCmd(gitCloneCmd);
-			if (StringUtils.isEmpty(installresponse))
-				installresponse = "Installation Successfully installed in:" + bootstrapInstallDir;
+			if (isValid(bootstrapInstallDir))
+				gitCloneCmd = "git clone " + cloneURL + " " + bootstrapInstallDir;
+			else
+				gitCloneCmd = "**ERR** app <" + app + "> Invalid Bootstrap Dir" +bootstrapInstallDir;
 		} else {
-			installresponse = "**ERR** app = " + app + " Repository Not Found";
+			gitCloneCmd = "**ERR** app <" + app + "> Repository Not Found";
 		}
-		return installresponse;
+		return gitCloneCmd;
 	}
 
 	public static LinkedHashMap<String, Object> getResponseLHM(String api, String app, String method,
@@ -226,9 +233,10 @@ public class InstallServices {
 			LinkedHashMap<String, Object> requestParms, LinkedHashMap<String, Object> requestBody) {
 		long startMillis = System.currentTimeMillis();
 
-		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : " + requestParms
-				+ "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
+		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : "
+				+ requestParms + "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
 
+		LinkedHashMap<String, Object> rawResponseLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> buildParms = getNewMergedBodyParms(requestParms, requestBody);
 		LinkedHashMap<String, Object> requestLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
@@ -238,22 +246,30 @@ public class InstallServices {
 		requestLHM.put("APP", app);
 		requestLHM.put("METHOD", method);
 		requestLHM.put("PARMS", requestParms);
-		responseLHM.put("REQUEST", requestLHM);
-		responseLHM.put("META", metaData);
+		rawResponseLHM.put("REQUEST", requestLHM);
+		rawResponseLHM.put("META", metaData);
 		metaData.put("SERVER OS", osName);
 		if (!StringUtils.isEmpty(requestBody)) {
 			requestLHM.put("BODY", requestBody);
 		}
+		// get Installation Clone Command
+		String gitCloneCmd = gitCloneCMD(app);
+		responseLHM.put("CLONE_CMD", gitCloneCmd);
+		String cloneStatus = cloneAPP(gitCloneCmd);
+		// get Installation Install Command
+		String installCMD = installCMD(app, buildParms);
+		responseLHM.put("INSTALL_CMD", installCMD);
+		// installresponse += execSysCmd(gitCloneCmd);
 		// Start API Processing
-		responseLHM.put(RESPONSE, InstallServices.installApp(app, buildParms));
+		rawResponseLHM.put(RESPONSE, responseLHM);
 
 		// END API Processing
 
 		long elapseTimeMS = System.currentTimeMillis() - startMillis;
 		metaData.put("PROCESSING TIME (MS)", elapseTimeMS);
 
-		System.out.println("ResponseLHM = \n" + responseLHM.toString());
-		return responseLHM;
+		System.out.println("ResponseLHM = \n" + rawResponseLHM.toString());
+		return rawResponseLHM;
 	}
 
 	public static LinkedHashMap<String, Object> getNewMergedBodyParms(LinkedHashMap<String, Object> requestParms,
