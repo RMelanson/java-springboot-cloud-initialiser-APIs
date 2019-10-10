@@ -97,7 +97,7 @@ public class InstallServices {
 		appRepoMap.put("LINUX-SCRIPTS-TEST", "linux-scripts-test");
 	}
 
-	private static String gitCloneURL(String app) {
+	private static String gitCloneScript(String app) {
 		if (!isValid(app))
 			return null;
 
@@ -166,39 +166,18 @@ public class InstallServices {
 		return installresponse;
 	}
 
-	private static String installApp(String app, LinkedHashMap<String, Object> buildParms) {
+	private static String getInstallScript(String app, LinkedHashMap<String, Object> buildParms) {
 		String installresponse = "";
-		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",","");
-		String gitRepo = gitCloneURL(app);
-		String shellScript = "./"+app+".sh " +parms;
-//		if (cmdLineParts.length > 1) {
-//			installresponse = cloneApp(app);
-//			if (installresponse.length() > 1)
-//				return installresponse;
-//			else {
-//				String parms = "";
-//				if (cmdLineParts.length > 2) {
-//					String[] parmsArr = Arrays.copyOfRange(cmdLineParts, 2, cmdLineParts.length);
-//					 for (Object parm : parmsArr) { 
-//						 parms += " "+(String)parm; 
-//				        } 
-//					 runSetup(app+parms);
-//				}
-//			}
-//		}
+		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
+		String shellScript = CI_BOOTSTRAP_DIR + "/" + app + ".sh " + parms;
 		installresponse = shellScript;
 		return installresponse;
-	}
-
-	private static void runSetup(String setupCmd) {
-		// TODO Auto-generated method stub
-		System.out.println("RUNNING setupCmd = " + setupCmd);
 	}
 
 	private static String cloneApp(String app) {
 		String installresponse = "";
 
-		String cloneURL = gitCloneURL(app);
+		String cloneURL = gitCloneScript(app);
 
 		if (isValid(cloneURL)) {
 			String bootstrapInstallDir = gitBootstrapInstallDir(app);
@@ -226,34 +205,46 @@ public class InstallServices {
 			LinkedHashMap<String, Object> requestParms, LinkedHashMap<String, Object> requestBody) {
 		long startMillis = System.currentTimeMillis();
 
-		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : " + requestParms
-				+ "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
+		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : "
+				+ requestParms + "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
 
 		LinkedHashMap<String, Object> buildParms = getNewMergedBodyParms(requestParms, requestBody);
 		LinkedHashMap<String, Object> requestLHM = new LinkedHashMap<String, Object>();
+		LinkedHashMap<String, Object> rawLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> metaData = new LinkedHashMap<String, Object>();
+		rawLHM.put("REQUEST", requestLHM);
+		rawLHM.put("META", metaData);
+		rawLHM.put(RESPONSE, responseLHM);
 
 		requestLHM.put("API", api);
 		requestLHM.put("APP", app);
 		requestLHM.put("METHOD", method);
 		requestLHM.put("PARMS", requestParms);
-		responseLHM.put("REQUEST", requestLHM);
-		responseLHM.put("META", metaData);
 		metaData.put("SERVER OS", osName);
 		if (!StringUtils.isEmpty(requestBody)) {
 			requestLHM.put("BODY", requestBody);
 		}
-		// Start API Processing
-		responseLHM.put(RESPONSE, InstallServices.installApp(app, buildParms));
-
+		String cloneScript = gitCloneScript(app);
+		if (isValid(cloneScript)) {
+			responseLHM.put("CLONE_SCRIPT", cloneScript);
+			execSysCmd(cloneScript);
+			String installScript = getInstallScript(app, buildParms);
+			if (isValid(installScript)) {
+				// Start API Processing
+				responseLHM.put("INSTALL_SCRIPT", installScript);
+//				execSysCmd(installScript);
+			} else
+				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
+		}
+		else
+			responseLHM.put("CLONE_SCRIPT INVALID", cloneScript);
 		// END API Processing
 
 		long elapseTimeMS = System.currentTimeMillis() - startMillis;
 		metaData.put("PROCESSING TIME (MS)", elapseTimeMS);
 
-		System.out.println("ResponseLHM = \n" + responseLHM.toString());
-		return responseLHM;
+		return rawLHM;
 	}
 
 	public static LinkedHashMap<String, Object> getNewMergedBodyParms(LinkedHashMap<String, Object> requestParms,
