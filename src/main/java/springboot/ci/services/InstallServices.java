@@ -26,12 +26,14 @@ public class InstallServices {
 	static final String ERROR = "ERROR";
 	static final String RESPONSE = "RESPONSE";
 	static final String APP = "app";
+	static final String GIT_CLONE = "git clone";
 	static final String GIT_PROTOCOL = "git";
 	static final String GIT_DOMAIN = "github.com";
 	static final String GIT_ACCOUNT = "RMelanson";
-	static final String GIT_FRMT = "%s@%s:%s/%s.git";
 	static final String CI_DIR = "/opt/CI";
 	static final String CI_BOOTSTRAP_DIR = CI_DIR + "/bootstraps";
+	static final String GIT_URL_FRMT = GIT_PROTOCOL+"@"+GIT_DOMAIN+":"+GIT_ACCOUNT+"/%s.git";
+	static final String GIT_SCRIPT_FRMT = "git clone "+GIT_URL_FRMT+" "+CI_BOOTSTRAP_DIR+"/%s";
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
@@ -97,7 +99,7 @@ public class InstallServices {
 		appRepoMap.put("LINUX-SCRIPTS-TEST", "linux-scripts-test");
 	}
 
-	private static String gitCloneScript(String app) {
+	private static String gitCloneURL(String app) {
 		if (!isValid(app))
 			return null;
 
@@ -105,21 +107,33 @@ public class InstallServices {
 		if (!isValid(appRepo))
 			return null;
 
-		String gitRepo = String.format(GIT_FRMT, GIT_PROTOCOL, GIT_DOMAIN, GIT_ACCOUNT, appRepo);
+		String gitRepo = String.format(GIT_URL_FRMT, appRepo);
 		return gitRepo;
 	}
 
-	private static String gitBootstrapInstallDir(String app) {
+	private static String gitCloneScript(String app) {
 		if (!isValid(app))
-			return null;
-
+			return "**ERROR** Invalid App <"+app+">";
+		
 		String appRepo = appRepoMap.get(app.toUpperCase());
 		if (!isValid(appRepo))
-			return null;
-		appRepo = appRepo.replace("linux-scripts-", "/").replace("-", "/");
+			return "**ERROR** Invalid App Repo <"+appRepo+">";
 
-		String gitRepo = CI_BOOTSTRAP_DIR + appRepo;
-		return gitRepo;
+		String subDir = gitBootstrapSubDir(appRepo);
+
+		if (!isValid(subDir))
+			return "**ERROR** Invalid Install Sub directory <"+subDir+">";
+
+		String cloneScript = String.format(GIT_SCRIPT_FRMT, appRepo, subDir);
+		return cloneScript;
+	}
+	
+	private static String gitBootstrapSubDir(String appRepo) {
+
+		if (!isValid(appRepo))
+			return null;
+		String subDir = appRepo.replace("linux-scripts-", "").replace("-", "/");
+		return subDir;
 	}
 
 	private static String execSysCmd(String cmd) {
@@ -180,7 +194,7 @@ public class InstallServices {
 		String cloneURL = gitCloneScript(app);
 
 		if (isValid(cloneURL)) {
-			String bootstrapInstallDir = gitBootstrapInstallDir(app);
+			String bootstrapInstallDir = gitBootstrapSubDir(app);
 			String gitCloneCmd = "git clone " + cloneURL + " " + bootstrapInstallDir;
 
 			/*
