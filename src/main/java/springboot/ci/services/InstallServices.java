@@ -5,8 +5,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -27,13 +25,18 @@ public class InstallServices {
 	static final String RESPONSE = "RESPONSE";
 	static final String APP = "app";
 	static final String GIT_CLONE = "git clone";
-	static final String GIT_PROTOCOL = "git";
+	static final String SSH_PROTOCOL = "git";
+	static final String HTTPS_PROTOCOL = "https";
 	static final String GIT_DOMAIN = "github.com";
 	static final String GIT_ACCOUNT = "RMelanson";
 	static final String CI_DIR = "/opt/CI";
 	static final String CI_BOOTSTRAP_DIR = CI_DIR + "/bootstraps";
-	static final String GIT_URL_FRMT = GIT_PROTOCOL+"@"+GIT_DOMAIN+":"+GIT_ACCOUNT+"/%s.git";
-	static final String GIT_SCRIPT_FRMT = "git clone "+GIT_URL_FRMT+" "+CI_BOOTSTRAP_DIR+"/%s";
+	static final String GIT_SSH_FRMT = SSH_PROTOCOL + "@" + GIT_DOMAIN + ":" + GIT_ACCOUNT + "/%s.git";
+	static final String GIT_HTTPS_FRMT = HTTPS_PROTOCOL + "://" + GIT_DOMAIN + "/" + GIT_ACCOUNT + "/%s.git";
+	static final String GIT_HTTPS_CMD = "git clone " + GIT_HTTPS_FRMT + " " + CI_BOOTSTRAP_DIR + "/%s";
+	static final String GIT_SSH_CMD = "git clone " + GIT_SSH_FRMT + " " + CI_BOOTSTRAP_DIR + "/%s";
+	static String GIT_MODE = "HTTPS";
+	static final String GIT_CMD = GIT_MODE.contentEquals("SSH") ? GIT_SSH_CMD : GIT_HTTPS_CMD;
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
@@ -107,29 +110,54 @@ public class InstallServices {
 		if (!isValid(appRepo))
 			return null;
 
-		String gitRepo = String.format(GIT_URL_FRMT, appRepo);
+		String gitRepo = String.format(GIT_SSH_FRMT, appRepo);
 		return gitRepo;
 	}
 
 	private static String gitCloneScript(String app) {
 		if (!isValid(app))
-			return "**ERROR** Invalid App <"+app+">";
-		
+			return "**ERROR** Invalid App <" + app + ">";
+
 		String appRepo = appRepoMap.get(app.toUpperCase());
 		if (!isValid(appRepo))
-			return "**ERROR** Invalid App Repo <"+appRepo+">";
+			return "**ERROR** Invalid App Repo <" + appRepo + ">";
 
 		String subDir = gitBootstrapSubDir(appRepo);
 
 		if (!isValid(subDir))
-			return "**ERROR** Invalid Install Sub directory <"+subDir+">";
+			return "**ERROR** Invalid Install Sub directory <" + subDir + ">";
 
-		String cloneScript = String.format(GIT_SCRIPT_FRMT, appRepo, subDir);
+		String cloneScript = String.format(GIT_CMD, appRepo, subDir);
 		return cloneScript;
 	}
 	
-	private static String gitBootstrapSubDir(String appRepo) {
+	private static String getAppInstallScript(String app) {
+	String installScript = getAppBootstrapDir(app) + "/setup.sh";
+		return installScript;
+	}
 
+	private static String getAppBootstrapDir(String app) {
+		String appBootStrapDir = CI_BOOTSTRAP_DIR+"/"+getAppSubDir(app);
+		return appBootStrapDir;
+	}
+	
+	private static String getAppSubDir(String app) {
+		if (!isValid(app))
+			return "**ERROR** Invalid App <" + app + ">";
+
+		String appRepo = appRepoMap.get(app.toUpperCase());
+		if (!isValid(appRepo))
+			return "**ERROR** Invalid App Repo <" + appRepo + ">";
+
+		String subDir = gitBootstrapSubDir(appRepo);
+
+		if (!isValid(subDir))
+			return "**ERROR** Invalid Install Sub directory <" + subDir + ">";
+		return subDir;
+	}
+	
+
+	private static String gitBootstrapSubDir(String appRepo) {
 		if (!isValid(appRepo))
 			return null;
 		String subDir = appRepo.replace("linux-scripts-", "").replace("-", "/");
@@ -181,33 +209,9 @@ public class InstallServices {
 	}
 
 	private static String getInstallScript(String app, LinkedHashMap<String, Object> buildParms) {
-		String installresponse = "";
 		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
-		String shellScript = CI_BOOTSTRAP_DIR + "/" + app + ".sh " + parms;
-		installresponse = shellScript;
-		return installresponse;
-	}
-
-	private static String cloneApp(String app) {
-		String installresponse = "";
-
-		String cloneURL = gitCloneScript(app);
-
-		if (isValid(cloneURL)) {
-			String bootstrapInstallDir = gitBootstrapSubDir(app);
-			String gitCloneCmd = "git clone " + cloneURL + " " + bootstrapInstallDir;
-
-			/*
-			 * Here we are executing the git Clone System Command. Returning the result as a
-			 * String
-			 */
-			installresponse += execSysCmd(gitCloneCmd);
-			if (StringUtils.isEmpty(installresponse))
-				installresponse = "Installation Successfully installed in:" + bootstrapInstallDir;
-		} else {
-			installresponse = "**ERR** app = " + app + " Repository Not Found";
-		}
-		return installresponse;
+		String installScript = getAppBootstrapDir(app) + "/setup.sh " + parms;
+		return installScript;
 	}
 
 	public static LinkedHashMap<String, Object> getResponseLHM(String api, String app, String method,
@@ -243,15 +247,16 @@ public class InstallServices {
 		if (isValid(cloneScript)) {
 			responseLHM.put("CLONE_SCRIPT", cloneScript);
 			execSysCmd(cloneScript);
+			String chmodCMD = "find "+ getAppBootstrapDir(app)+" -type f -iname *.sh -exec chmod +x {} \\;";
+            execSysCmd(chmodCMD);
 			String installScript = getInstallScript(app, buildParms);
 			if (isValid(installScript)) {
 				// Start API Processing
 				responseLHM.put("INSTALL_SCRIPT", installScript);
-//				execSysCmd(installScript);
+				execSysCmd(installScript);
 			} else
 				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
-		}
-		else
+		} else
 			responseLHM.put("CLONE_SCRIPT INVALID", cloneScript);
 		// END API Processing
 
