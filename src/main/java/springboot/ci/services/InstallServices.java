@@ -247,7 +247,7 @@ public class InstallServices {
 		if (isValid(cloneScript)) {
 			responseLHM.put("CLONE_SCRIPT", cloneScript);
 			execSysCmd(cloneScript);
-			String chmodCMD = "find "+ getAppBootstrapDir(app)+" -type f -iname *.sh -exec chmod +x {} \\;";
+			String chmodCMD = "find "+ getAppBootstrapDir(app)+" -type f -iname *.sh -exec chmod 755 {} \\;";
             execSysCmd(chmodCMD);
 			String installScript = getInstallScript(app, buildParms);
 			if (isValid(installScript)) {
