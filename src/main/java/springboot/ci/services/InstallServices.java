@@ -167,6 +167,7 @@ public class InstallServices {
 
 	private static String execSysCmd(String cmd) {
 		String sysCmdresponse = "";
+		cmd += " 2>&1";
 		System.out.println("CMD = " + cmd);
 
 		if (isValid(cmd)) {
@@ -206,6 +207,7 @@ public class InstallServices {
 			}
 		} else
 			sysCmdresponse = "*ERR Application not available for installation";
+		System.out.println("sysCmdresponse: "+sysCmdresponse);
 		return sysCmdresponse;
 	}
 
@@ -250,7 +252,7 @@ public class InstallServices {
 			responseLHM.put("EXECUTING CLONE_SCRIPT: ", cloneScript);
 			responseLHM.put("RESPONSE  CLONE_SCRIPT: ", cmdResp);
 			String bootstrapAppDir = getBootstrapAppDir(app);
-			String chmodCMD = "find "+ bootstrapAppDir + " -type f -iname *.sh -exec chmod 755 {} \\;";
+			String chmodCMD = "find "+ bootstrapAppDir + " -name '*.sh' -exec chmod 744 {} \\;";
             cmdResp = execSysCmd(chmodCMD);
 			responseLHM.put("EXECUTING CHMOD: ", chmodCMD);
 			responseLHM.put("RESPONSE  CHMOD: ", cmdResp);
