@@ -31,10 +31,11 @@ public class InstallServices {
 	static final String GIT_ACCOUNT = "RMelanson";
 	static final String CI_DIR = "/opt/CI";
 	static final String CI_BOOTSTRAP_DIR = CI_DIR + "/bootstraps";
+	static final String CI_BOOTSTRAP_APP_DIR = CI_BOOTSTRAP_DIR + "/%s";
 	static final String GIT_SSH_FRMT = SSH_PROTOCOL + "@" + GIT_DOMAIN + ":" + GIT_ACCOUNT + "/%s.git";
 	static final String GIT_HTTPS_FRMT = HTTPS_PROTOCOL + "://" + GIT_DOMAIN + "/" + GIT_ACCOUNT + "/%s.git";
-	static final String GIT_HTTPS_CMD = "git clone " + GIT_HTTPS_FRMT + " " + CI_BOOTSTRAP_DIR + "/%s";
-	static final String GIT_SSH_CMD = "git clone " + GIT_SSH_FRMT + " " + CI_BOOTSTRAP_DIR + "/%s";
+	static final String GIT_HTTPS_CMD = "git clone " + GIT_HTTPS_FRMT + " " + CI_BOOTSTRAP_APP_DIR;
+	static final String GIT_SSH_CMD = "git clone " + GIT_SSH_FRMT + " " + CI_BOOTSTRAP_APP_DIR;
 	static String GIT_MODE = "HTTPS";
 	static final String GIT_CMD = GIT_MODE.contentEquals("SSH") ? GIT_SSH_CMD : GIT_HTTPS_CMD;
 
@@ -132,13 +133,13 @@ public class InstallServices {
 	}
 	
 	private static String getAppInstallScript(String app) {
-	String installScript = getAppBootstrapDir(app) + "/setup.sh";
+	String installScript = getBootstrapAppDir(app) + "/setup.sh";
 		return installScript;
 	}
 
-	private static String getAppBootstrapDir(String app) {
-		String appBootStrapDir = CI_BOOTSTRAP_DIR+"/"+getAppSubDir(app);
-		return appBootStrapDir;
+	private static String getBootstrapAppDir(String app) {
+		String bootStrapAppDir = String.format(CI_BOOTSTRAP_APP_DIR, getAppSubDir(app));
+		return bootStrapAppDir;
 	}
 	
 	private static String getAppSubDir(String app) {
@@ -165,7 +166,7 @@ public class InstallServices {
 	}
 
 	private static String execSysCmd(String cmd) {
-		String installresponse = "";
+		String sysCmdresponse = "";
 		System.out.println("CMD = " + cmd);
 
 		if (isValid(cmd)) {
@@ -181,16 +182,16 @@ public class InstallServices {
 					InputStreamReader inread = new InputStreamReader(buf);
 					BufferedReader bufferedreader = new BufferedReader(inread);
 
-					installresponse = IOUtils.toString(bufferedreader);
+					sysCmdresponse = IOUtils.toString(bufferedreader);
 
-					System.out.println(installresponse);
+					System.out.println(sysCmdresponse);
 					// Check for cmd failure
 					try {
 						if (p.waitFor() != 0) {
-							installresponse = "*ERR: waitFor()" + p.exitValue();
+							sysCmdresponse = "*ERR: waitFor()" + p.exitValue();
 						}
 					} catch (InterruptedException e) {
-						installresponse = "*ERR: InterruptedException" + e.toString();
+						sysCmdresponse = "*ERR: InterruptedException" + e.toString();
 						System.err.println(e);
 					} finally {
 						// Close the InputStream
@@ -200,17 +201,17 @@ public class InstallServices {
 						in.close();
 					}
 				} catch (IOException e) {
-					installresponse = "*ERR IOException" + e.toString();
+					sysCmdresponse = "*ERR IOException" + e.toString();
 				}
 			}
 		} else
-			installresponse = "*ERR Application not available for installation";
-		return installresponse;
+			sysCmdresponse = "*ERR Application not available for installation";
+		return sysCmdresponse;
 	}
 
 	private static String getInstallScript(String app, LinkedHashMap<String, Object> buildParms) {
 		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
-		String installScript = getAppBootstrapDir(app) + "/setup.sh " + parms;
+		String installScript = getBootstrapAppDir(app) + "/setup.sh " + parms;
 		return installScript;
 	}
 
@@ -245,15 +246,31 @@ public class InstallServices {
 		}
 		String cloneScript = gitCloneScript(app);
 		if (isValid(cloneScript)) {
-			responseLHM.put("CLONE_SCRIPT", cloneScript);
-			execSysCmd(cloneScript);
-			String chmodCMD = "find "+ getAppBootstrapDir(app)+" -type f -iname *.sh -exec chmod 755 {} \\;";
-            execSysCmd(chmodCMD);
+			String cmdResp = execSysCmd(cloneScript);
+			responseLHM.put("EXECUTING CLONE_SCRIPT: ", cloneScript);
+			responseLHM.put("RESPONSE  CLONE_SCRIPT: ", cmdResp);
+			String bootstrapAppDir = getBootstrapAppDir(app);
+			String chmodCMD = "find "+ bootstrapAppDir + " -type f -iname *.sh -exec chmod 755 {} \\;";
+            cmdResp = execSysCmd(chmodCMD);
+			responseLHM.put("EXECUTING CHMOD: ", chmodCMD);
+			responseLHM.put("RESPONSE  CHMOD: ", cmdResp);
 			String installScript = getInstallScript(app, buildParms);
 			if (isValid(installScript)) {
+				// Change directory to Bootstrap App Directory
+				String chmodAppDir = "cd " + bootstrapAppDir;
+	            cmdResp = execSysCmd(chmodAppDir);
+				responseLHM.put("EXECUTING CD: ", chmodAppDir);
+				responseLHM.put("RESPONSE  CD: ", cmdResp);
+				
+				// Test current Directory
+	            cmdResp = execSysCmd("pwd");
+				responseLHM.put("EXECUTING PWD: ", chmodAppDir);
+				responseLHM.put("RESPONSE  PWD: ", cmdResp);
+				
 				// Start API Processing
-				responseLHM.put("INSTALL_SCRIPT", installScript);
-				execSysCmd(installScript);
+				cmdResp = execSysCmd(installScript);
+				responseLHM.put("EXECUTING INSTALL_SCRIPT: ", installScript);
+				responseLHM.put("RESPONSE  INSTALL_SCRIPT: ", cmdResp);
 			} else
 				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
 		} else
