@@ -257,27 +257,28 @@ public class InstallServices {
 //			String chmodCMD = "find "+ bootstrapAppDir + " -name '*.sh' -exec chmod 745 {} \\;";
 			String chmodCMD = String.format(SET_UP_APP, bootstrapAppDir);
             cmdResp = execSysCmd(chmodCMD);
-			responseLHM.put("EXECUTING CHMOD: ", chmodCMD);
-			responseLHM.put("RESPONSE  CHMOD: ", cmdResp);
+			responseLHM.put("EXECUTING SETUP: ", chmodCMD);
+			responseLHM.put("RESPONSE  SETUP: ", cmdResp);
 			String installScript = getInstallScript(app, buildParms);
-			if (isValid(installScript)) {
-				// Change directory to Bootstrap App Directory
-				String chmodAppDir = "cd " + bootstrapAppDir;
-	            cmdResp = execSysCmd(chmodAppDir);
-				responseLHM.put("EXECUTING CD: ", chmodAppDir);
-				responseLHM.put("RESPONSE  CD: ", cmdResp);
-				
-				// Test current Directory
-	            cmdResp = execSysCmd("pwd");
-				responseLHM.put("EXECUTING PWD: ", chmodAppDir);
-				responseLHM.put("RESPONSE  PWD: ", cmdResp);
-				
-				// Start API Processing
-				cmdResp = execSysCmd(installScript);
-				responseLHM.put("EXECUTING INSTALL_SCRIPT: ", installScript);
-				responseLHM.put("RESPONSE  INSTALL_SCRIPT: ", cmdResp);
-			} else
-				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
+			TO DO ADD PARMS AND REEMOVE INSTALLSCRIPT
+//			if (isValid(installScript)) {
+//				// Change directory to Bootstrap App Directory
+//				String chmodAppDir = "cd " + bootstrapAppDir;
+//	            cmdResp = execSysCmd(chmodAppDir);
+//				responseLHM.put("EXECUTING CD: ", chmodAppDir);
+//				responseLHM.put("RESPONSE  CD: ", cmdResp);
+//				
+//				// Test current Directory
+//	            cmdResp = execSysCmd("pwd");
+//				responseLHM.put("EXECUTING PWD: ", chmodAppDir);
+//				responseLHM.put("RESPONSE  PWD: ", cmdResp);
+//				
+//				// Start API Processing
+//				cmdResp = execSysCmd(installScript);
+//				responseLHM.put("EXECUTING INSTALL_SCRIPT: ", installScript);
+//				responseLHM.put("RESPONSE  INSTALL_SCRIPT: ", cmdResp);
+//			} else
+//				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
 		} else
 			responseLHM.put("CLONE_SCRIPT INVALID", cloneScript);
 		// END API Processing
