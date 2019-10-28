@@ -38,6 +38,7 @@ public class InstallServices {
 	static final String GIT_SSH_CMD = "git clone " + GIT_SSH_FRMT + " " + CI_BOOTSTRAP_APP_DIR;
 	static String GIT_MODE = "HTTPS";
 	static final String GIT_CMD = GIT_MODE.contentEquals("SSH") ? GIT_SSH_CMD : GIT_HTTPS_CMD;
+	static final String SET_UP_APP ="/opt/CI/bin/scripts/bash/setupApp.sh %s";
 
 	public static Map<String, Object> sysCmd(LinkedHashMap<String, Object> lhm) {
 		return lhm;
@@ -167,7 +168,7 @@ public class InstallServices {
 
 	private static String execSysCmd(String cmd) {
 		String sysCmdresponse = "";
-		cmd += " 2>&1";
+//		cmd += " 2>&1";
 		System.out.println("CMD = " + cmd);
 
 		if (isValid(cmd)) {
@@ -252,7 +253,9 @@ public class InstallServices {
 			responseLHM.put("EXECUTING CLONE_SCRIPT: ", cloneScript);
 			responseLHM.put("RESPONSE  CLONE_SCRIPT: ", cmdResp);
 			String bootstrapAppDir = getBootstrapAppDir(app);
-			String chmodCMD = "find "+ bootstrapAppDir + " -name '*.sh' -exec chmod 744 {} \\;";
+			// BOTTOM LINE COMMENTED OUT NOT WORKINK
+//			String chmodCMD = "find "+ bootstrapAppDir + " -name '*.sh' -exec chmod 745 {} \\;";
+			String chmodCMD = String.format(SET_UP_APP, bootstrapAppDir);
             cmdResp = execSysCmd(chmodCMD);
 			responseLHM.put("EXECUTING CHMOD: ", chmodCMD);
 			responseLHM.put("RESPONSE  CHMOD: ", cmdResp);
