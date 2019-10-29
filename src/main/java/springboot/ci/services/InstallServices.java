@@ -15,7 +15,6 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.util.StringUtils;
 
 public class InstallServices {
-
 	static String osName = System.getProperty("os.name");
 	static boolean isWindows = osName.toLowerCase().startsWith("windows");
 
