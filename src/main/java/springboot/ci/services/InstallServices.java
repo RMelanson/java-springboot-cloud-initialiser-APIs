@@ -212,9 +212,8 @@ public class InstallServices {
 		return sysCmdresponse;
 	}
 
-	private static String getInstallScript(String app, LinkedHashMap<String, Object> buildParms) {
-		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
-		String installScript = getBootstrapAppDir(app) + "/setup.sh " + parms;
+	private static String getInstallScript(String app, String buildParms) {
+		String installScript = getBootstrapAppDir(app) + "/setup.sh " + buildParms;
 		return installScript;
 	}
 
@@ -230,7 +229,7 @@ public class InstallServices {
 		System.out.println("Executing " + api + "API " + api + "api " + method + " Method" + "\nrequestParms : "
 				+ requestParms + "\nrequestBody : " + (requestBody == null ? "null" : requestBody));
 
-		LinkedHashMap<String, Object> buildParms = getNewMergedBodyParms(requestParms, requestBody);
+		String buildParms = getNewMergedBodyParms(requestParms, requestBody);
 		LinkedHashMap<String, Object> requestLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> rawLHM = new LinkedHashMap<String, Object>();
 		LinkedHashMap<String, Object> responseLHM = new LinkedHashMap<String, Object>();
@@ -260,25 +259,13 @@ public class InstallServices {
 			responseLHM.put("EXECUTING SETUP: ", chmodCMD);
 			responseLHM.put("RESPONSE  SETUP: ", cmdResp);
 			String installScript = getInstallScript(app, buildParms);
-			TO DO ADD PARMS AND REEMOVE INSTALLSCRIPT
-//			if (isValid(installScript)) {
-//				// Change directory to Bootstrap App Directory
-//				String chmodAppDir = "cd " + bootstrapAppDir;
-//	            cmdResp = execSysCmd(chmodAppDir);
-//				responseLHM.put("EXECUTING CD: ", chmodAppDir);
-//				responseLHM.put("RESPONSE  CD: ", cmdResp);
-//				
-//				// Test current Directory
-//	            cmdResp = execSysCmd("pwd");
-//				responseLHM.put("EXECUTING PWD: ", chmodAppDir);
-//				responseLHM.put("RESPONSE  PWD: ", cmdResp);
-//				
-//				// Start API Processing
-//				cmdResp = execSysCmd(installScript);
-//				responseLHM.put("EXECUTING INSTALL_SCRIPT: ", installScript);
-//				responseLHM.put("RESPONSE  INSTALL_SCRIPT: ", cmdResp);
-//			} else
-//				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
+//			TO DO ADD PARMS AND REEMOVE INSTALLSCRIPT
+			if (isValid(installScript)) {
+				cmdResp = execSysCmd(installScript);
+				responseLHM.put("EXECUTING INSTALL_SCRIPT: ", installScript);
+				responseLHM.put("RESPONSE  INSTALL_SCRIPT: ", cmdResp);
+			} else
+				responseLHM.put("INSTALL_SCRIPT INVALID", installScript);
 		} else
 			responseLHM.put("CLONE_SCRIPT INVALID", cloneScript);
 		// END API Processing
@@ -289,7 +276,7 @@ public class InstallServices {
 		return rawLHM;
 	}
 
-	public static LinkedHashMap<String, Object> getNewMergedBodyParms(LinkedHashMap<String, Object> requestParms,
+	public static String getNewMergedBodyParms(LinkedHashMap<String, Object> requestParms,
 			LinkedHashMap<String, Object> requestBody) {
 		LinkedHashMap<String, Object> buildParms = new LinkedHashMap<String, Object>();
 
@@ -304,7 +291,9 @@ public class InstallServices {
 				Object value = requestBody.get(key);
 				buildParms.put(key, value);
 			}
-		return buildParms;
+		String parms = buildParms.toString().replace("{", "").replace("}", "").replace(",", "");
+
+		return parms;
 	}
 
 	public static void setUpperCaseKeys(Map<String, Object> mp) {
