@@ -250,9 +250,9 @@ public class InstallServices {
 			String cmdResp = execSysCmd(cloneScript);
 			responseLHM.put("EXECUTING CLONE_SCRIPT: ", cloneScript);
 			responseLHM.put("RESPONSE  CLONE_SCRIPT: ", cmdResp);
-			String bootstrapAppDir = getBootstrapAppDir(app);
+//			String bootstrapAppDir = getBootstrapAppDir(app);
 
-			String installScript = String.format(SET_UP_APP, bootstrapAppDir, buildParms);
+			String installScript = String.format(SET_UP_APP, getAppSubDir(app), buildParms);
 
 			if (isValid(installScript)) {
 				cmdResp = execSysCmd(installScript);
