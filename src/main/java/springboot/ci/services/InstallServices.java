@@ -35,7 +35,8 @@ public class InstallServices {
 	static final String GIT_HTTPS_FRMT = HTTPS_PROTOCOL + "://" + GIT_DOMAIN + "/" + GIT_ACCOUNT + "/%s.git";
 	static final String GIT_HTTPS_CMD = "git clone " + GIT_HTTPS_FRMT + " " + CI_BOOTSTRAP_APP_DIR;
 	static final String GIT_SSH_CMD = "git clone " + GIT_SSH_FRMT + " " + CI_BOOTSTRAP_APP_DIR;
-	static String GIT_MODE = "HTTPS";
+//	static String GIT_MODE = "HTTPS";
+	static String GIT_MODE = "SSH";
 	static final String GIT_CMD = GIT_MODE.contentEquals("SSH") ? GIT_SSH_CMD : GIT_HTTPS_CMD;
 	static final String SET_UP_APP ="/opt/CI/bin/scripts/bash/setupApp.sh %s %s";
 
@@ -115,11 +116,16 @@ public class InstallServices {
 		return gitRepo;
 	}
 
+	private static String gitAppRepo(String app) {
+		String appRepo = appRepoMap.get(app.toUpperCase());
+		return appRepo;
+	}
+
 	private static String gitCloneScript(String app) {
 		if (!isValid(app))
 			return "**ERROR** Invalid App <" + app + ">";
 
-		String appRepo = appRepoMap.get(app.toUpperCase());
+		String appRepo = gitAppRepo(app);
 		if (!isValid(appRepo))
 			return "**ERROR** Invalid App Repo <" + appRepo + ">";
 
@@ -247,12 +253,17 @@ public class InstallServices {
 		}
 		String cloneScript = gitCloneScript(app);
 		if (isValid(cloneScript)) {
-			String cmdResp = execSysCmd(cloneScript);
+			String cmdResp;
+//			cmdResp = execSysCmd("id");
+//			responseLHM.put("EXECUTING ID: ", "id");
+//			responseLHM.put("RESPONSE  ID_SCRIPT: ", cmdResp);
+			cmdResp = execSysCmd(cloneScript);
 			responseLHM.put("EXECUTING CLONE_SCRIPT: ", cloneScript);
 			responseLHM.put("RESPONSE  CLONE_SCRIPT: ", cmdResp);
 //			String bootstrapAppDir = getBootstrapAppDir(app);
 
-			String installScript = String.format(SET_UP_APP, getAppSubDir(app), buildParms);
+			String appRepo = gitAppRepo(app);
+			String installScript = String.format(SET_UP_APP, appRepo, buildParms);
 
 			if (isValid(installScript)) {
 				cmdResp = execSysCmd(installScript);
