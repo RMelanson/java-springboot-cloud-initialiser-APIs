@@ -162,7 +162,6 @@ public class InstallServices {
 			return "**ERROR** Invalid Install Sub directory <" + subDir + ">";
 		return subDir;
 	}
-	
 
 	private static String gitBootstrapSubDir(String appRepo) {
 		if (!isValid(appRepo))

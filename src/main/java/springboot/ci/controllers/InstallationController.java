@@ -16,13 +16,11 @@ import springboot.ci.services.InstallServices;
 @CrossOrigin("*")
 @RestController
 public class InstallationController {
-
-	static final String CMD = "CMD";
-
 	// GET MAPPINGS
 	
 	@GetMapping(value = "/install/{app}", produces = "application/json")
-	public Map<String, Object> systemGet(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app) {
+	public Map<String, Object> installGet(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app) {
+		System.out.println("EXECUTING: systemGet("+requestParms+")");
 		LinkedHashMap<String, Object> responseLHM = InstallServices.getResponseLHM("/install", app, "Get", requestParms);
 		return responseLHM;
 	}
@@ -30,8 +28,9 @@ public class InstallationController {
 	// POST MAPPINGS
 
 	@PostMapping(value = "/install/{app}", produces = "application/json")
-	public Map<String, Object> systemPost(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app,
+	public Map<String, Object> installPost(@RequestParam LinkedHashMap<String, Object> requestParms, @PathVariable("app") String app,
 			@RequestBody LinkedHashMap<String, Object> requestBody) {
+		System.out.println("EXECUTING: installPost("+requestParms+")");
 
 		LinkedHashMap<String, Object> responseLHM = InstallServices.postResponseLHM("/install", app, "Get", requestParms, requestBody);
 		return responseLHM;
